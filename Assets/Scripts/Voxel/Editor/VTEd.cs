@@ -61,12 +61,18 @@ public class VTEd : Editor {
 				v.edx=Mathf.Clamp (v.edx,0,v.nx-1);
 				v.edy=Mathf.Clamp (v.edy,0,v.ny-1);
 				v.part(v.edx,v.edy).gameObject.SetActive (true);
+				
+				v.part (v.edx,v.edy).ManageLOD (v,v.edx,v.edy,Camera.current.transform.position);
+			}
+		}
+		if(e.type==EventType.mouseDown) {
+			if(e.button==1) {
+				v.part (v.edx,v.edy).MakeTransitions (v,v.edx,v.edy);
 			}
 		}
 		Vector3 p=v.partSize;p.Scale (new Vector3(v.edx+0.5f,0.5f,v.edy+0.5f));
 		partCube.transform.position=p;
 		partCube.transform.localScale=v.partSize;
-		v.part (v.edx,v.edy).ManageLOD (v,v.edx,v.edy,Camera.current.transform.position);
 		Vector3 cen=v.partSize;cen.Scale (new Vector3(v.edx+0.5f,0.5f,v.edy+0.5f));
 		Bounds b0=new Bounds(cen,v.partSize);
 		int l=v.part (v.edx,v.edy).getLOD (v,Camera.current.transform.position,b0);
