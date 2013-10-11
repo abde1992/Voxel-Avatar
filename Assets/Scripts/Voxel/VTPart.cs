@@ -196,11 +196,12 @@ public partial class VTPart : MonoBehaviour {
 								}
 								vert.Add(p0+d0/(d0-d1)*(p1-p0));
 							}
-							if(!invert) {
-								tri.Add (vert.Count-2);tri.Add (vert.Count-3);tri.Add (vert.Count-1);
-							} else {
+							for(int b=0,n=vert.Count;b<3;b++) vert.Add (vert[n-3+b]);
+							//if(invert) {
+								tri.Add (vert.Count-2-3);tri.Add (vert.Count-3-3);tri.Add (vert.Count-1-3);
+							//} else {
 								tri.Add (vert.Count-3);tri.Add (vert.Count-2);tri.Add (vert.Count-1);
-							}
+							//}
 						}
 					}
 				}
