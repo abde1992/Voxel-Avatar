@@ -4,12 +4,11 @@ using System.Collections.Generic;
 
 public partial class VTPart : MonoBehaviour {
 	
-	[HideInInspector] public Vector3 size=new Vector3(1000,600,1000);
-	public float dn=4,blockSize=200;
+	[HideInInspector] public int px,py;
 	public Material mat,grassMat;
-	public GameObject mesh,tree;
+	public GameObject mesh;
+	public GameObject[] treePrefabs;
 	public List<VTChunk> chunks=new List<VTChunk>();
-	public List<Mesh> treeMesh=new List<Mesh>();
 	
 	float Density(Vector3 p) {
 		/*Vector3 v=p-size/2;v.y=0;
@@ -17,8 +16,8 @@ public partial class VTPart : MonoBehaviour {
 		float d=(h-p.y)*(p.y-100);
 		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.x)-size.x*0.4f,0f,Mathf.Infinity);
 		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.z)-size.z*0.4f,0f,Mathf.Infinity);*/
-		float d=size.y/2-p.y;
-		float f=0.00632f/7,a=size.y/4;
+		float d=v.partSize.y/2-p.y;
+		float f=0.00632f/7,a=v.partSize.y/4;
 		System.Func<float,float,float> NLQs=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf));
 		System.Func<float,float,Vector3,float> NLQs1=(mf,ma,p1)=>a*ma*(SimplexNoise.Noise.Generate (p1*f*mf));
 		System.Func<float,float,float> NLQu=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf)+1)/2;
@@ -41,22 +40,42 @@ public partial class VTPart : MonoBehaviour {
 		return d;
 	}
 	
-	public void Make() {
+	public void Make(float dn) {
 		for(int i=0;i<transform.childCount;) DestroyImmediate (transform.GetChild (0).gameObject);
 		mesh=GameObject.Find (gameObject.name+" mesh");
 		if(mesh!=null) DestroyImmediate (mesh);
 		mesh=new GameObject(gameObject.name+" mesh");
 		mesh.transform.parent=UtilEditor.createOrGetGO ("VTMesh",null).transform;
-		blockSize=Mathf.NextPowerOfTwo ((int)blockSize);
-		int nx=Mathf.RoundToInt (size.x/blockSize);
-		int ny=Mathf.RoundToInt (size.y/blockSize);
-		int nz=Mathf.RoundToInt (size.z/blockSize);
+		v.blockSize=Mathf.NextPowerOfTwo ((int)v.blockSize);
+		Vector3 size=v.partSize;
+		int nx=Mathf.RoundToInt (size.x/v.blockSize);
+		int ny=Mathf.RoundToInt (size.y/v.blockSize);
+		int nz=Mathf.RoundToInt (size.z/v.blockSize);
 		chunks.Clear ();
-		VTChunk[,,] nch=new VTChunk[nx,ny,nz];
+		VTChunk[,,] nch=new VTChunk[nx+2,ny+2,nz+2];
+		for(int i=0;i<2;i++) {
+			if(px+i*2-1>=v.nx||px+i*2-1<0) continue;
+			for(int j=0;j<ny;j++)
+				for(int k=0;k<nz;k++) {
+					VTPart p=v.part (px+i*2-1,py);
+					foreach(VTChunk c in p.chunks) {
+						if(c.x==((i+1)%2)*(nx-1)&&c.y==j&&c.z==k) {nch[i*nx,j+1,k+1]=c;break;}
+					}
+				}
+		}
+		for(int i=0;i<nx;i++)
+			for(int j=0;j<ny;j++)
+				for(int k=0;k<2;k++) {
+					if(py+k*2-1>=v.ny||py+k*2-1<0) continue;
+					VTPart p=v.part (px,py+k*2-1);
+					foreach(VTChunk c in p.chunks) {
+						if(c.z==((k+1)%2)*(nz-1)&&c.y==j&&c.x==i) {nch[i+1,j+1,k*nz]=c;break;}
+					}
+				}
 		for(int i=0,gi=0;i<nx;i++) {
 			for(int j=0;j<ny;j++) {
 				for(int k=0;k<nz;k++) {
-					Mesh m=Make (blockSize*new Vector3(i,j,k),blockSize*Vector3.one);
+					Mesh m=Make (dn,origin+v.blockSize*new Vector3(i,j,k),v.blockSize*Vector3.one);
 					if(m==null) continue;
 					GameObject g=new GameObject("Chunk"+gi++);
 					g.transform.parent=mesh.transform;
@@ -67,20 +86,20 @@ public partial class VTPart : MonoBehaviour {
 					VTChunk c=g.AddComponent<VTChunk>();
 					c.x=i;c.y=j;c.z=k;
 					System.Func<int,int,int,int> SetNeighs=(x,y,z)=> {
-						VTChunk c1=nch[i+x,j+y,k+z];
+						VTChunk c1=nch[i+1+x,j+1+y,k+1+z];
 						if(c1!=null) {c.setNeigh (x,y,z,c1);c1.setNeigh (-x,-y,-z,c);}
 						return 0;
 					};
-					if(i>0) SetNeighs(-1,0,0);
-					if(j>0) SetNeighs(0,-1,0);
-					if(k>0) SetNeighs(0,0,-1);
-					nch[i,j,k]=c;
+					SetNeighs(-1,0,0);SetNeighs(1,0,0);
+					SetNeighs(0,-1,0);SetNeighs(0,1,0);
+					SetNeighs(0,0,-1);SetNeighs(0,0,1);
+					nch[i+1,j+1,k+1]=c;
 					chunks.Add (c);
 				}
 			}
 		}
 	}
-	Mesh Make(Vector3 or,Vector3 size) {
+	Mesh Make(float dn,Vector3 or,Vector3 size) {
 		int nx=Mathf.RoundToInt (size.x/dn);
 		int ny=Mathf.RoundToInt (size.y/dn);
 		int nz=Mathf.RoundToInt (size.z/dn);
@@ -148,125 +167,44 @@ public partial class VTPart : MonoBehaviour {
 		for(int i=0;i<v.lod.Length;i++) if(d<v.lod[i].d) return i;
 		return v.lod.Length-1;
 	}
-	public void ManageLOD(VoxelTerrain v,int x,int y,Vector3 p) {
-		Vector3 cen=v.partSize;cen.Scale (new Vector3(x+0.5f,0.5f,y+0.5f));
+	public void ManageLOD(Vector3 p) {
+		Vector3 cen=v.partSize;cen.Scale (new Vector3(px+0.5f,0.5f,py+0.5f));
 		Bounds b0=new Bounds(cen,v.partSize);
 		foreach(VTChunk c in chunks) {
 			MeshFilter mf=c.GetComponent<MeshFilter>();
 			int l=c.lod=getLOD(v,p,mf.sharedMesh!=null?mf.sharedMesh.bounds:b0);
-			string path="VT/LOD"+l+"/Part("+x+","+y+")/"+c.gameObject.name+".asset";
+			string path="VT/LOD"+l+"/Part("+px+","+py+")/"+c.gameObject.name+".asset";
 			path=path.Substring (0,path.IndexOf ("."));
 			Mesh m=Resources.Load(path,typeof(Mesh)) as Mesh;
 			mf.sharedMesh=m as Mesh;
 			c.GetComponent<MeshCollider>().sharedMesh=m;
 		}
-		
-		MakeTransitions(v,x,y);
 	}
 	
-	public void MakeTransitions(VoxelTerrain v,int x,int y) {
-		List<Vector3> vert=new List<Vector3>();
-		List<int> tri=new List<int>();
-		foreach(VTChunk c in chunks) {
-			Vector3 or=blockSize*new Vector3(c.x,c.y,c.z),size=blockSize*Vector3.one;
-			int nx=Mathf.RoundToInt (size.x/v.lod[c.lod].dn);
-			int ny=Mathf.RoundToInt (size.y/v.lod[c.lod].dn);
-			int nz=Mathf.RoundToInt (size.z/v.lod[c.lod].dn);
-			if(c.getNeigh (0,1,0)!=null&&c.lod==c.getNeigh (0,1,0).lod+1) {
-				for(int i=0;i<nx;i++) {
-					for(int j=0;j<nz;j++) {
-						System.Func<int,int,Vector3> gridPt=(a,b)=> {
-							return or+new Vector3((float)(i+(float)a/2)/(float)nx*size.x,(float)(ny)/(float)ny*size.y,(float)(j+(float)b/2)/(float)nz*size.z);
-						};
-						int icase=0;
-						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
-								icase+=transitionCaseValues[b*3+a];
-						int classIndex=transitionCellClass[icase];
-						bool invert=(classIndex&0x80)>0;
-						classIndex=classIndex&0x7F;
-						int gc=transitionCellData[classIndex][0];
-						int nv=gc>>4,tc=gc&0x0F;
-						for(int a=0;a<tc*3;a+=3) {
-							for(int b=0;b<3;b++) {
-								int vd=transitionVertexData[icase][transitionCellData[classIndex][a+1+b]];
-								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
-								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
-								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
-								if(d0*d1>=0) {
-									Debug.LogError ("transition density sign");
-								}
-								vert.Add(p0+d0/(d0-d1)*(p1-p0));
-							}
-							for(int b=0,n=vert.Count;b<3;b++) vert.Add (vert[n-3+b]);
-							//if(invert) {
-								tri.Add (vert.Count-2-3);tri.Add (vert.Count-3-3);tri.Add (vert.Count-1-3);
-							//} else {
-								tri.Add (vert.Count-3);tri.Add (vert.Count-2);tri.Add (vert.Count-1);
-							//}
-						}
-					}
-				}
-			}
-			
-			if(c.getNeigh (0,-1,0)!=null&&c.lod==c.getNeigh (0,-1,0).lod+1) {
-				for(int i=0;i<nx;i++) {
-					for(int j=0;j<nz;j++) {
-						System.Func<int,int,Vector3> gridPt=(a,b)=> {
-							return or+new Vector3((float)(i+(float)a/2)/(float)nx*size.x,(float)(0)/(float)ny*size.y,(float)(j+(float)b/2)/(float)nz*size.z);
-						};
-						int icase=0;
-						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
-								icase+=transitionCaseValues[b*3+a];
-						int classIndex=transitionCellClass[icase];
-						bool invert=(classIndex&0x80)>0;
-						classIndex=classIndex&0x7F;
-						int gc=transitionCellData[classIndex][0];
-						int nv=gc>>4,tc=gc&0x0F;
-						for(int a=0;a<tc*3;a+=3) {
-							for(int b=0;b<3;b++) {
-								int vd=transitionVertexData[icase][transitionCellData[classIndex][a+1+b]];
-								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
-								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
-								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
-								if(d0*d1>=0) {
-									Debug.LogError ("transition density sign");
-								}
-								vert.Add(p0+d0/(d0-d1)*(p1-p0));
-							}
-							for(int b=0,n=vert.Count;b<3;b++) vert.Add (vert[n-3+b]);
-							//if(invert) {
-								tri.Add (vert.Count-2-3);tri.Add (vert.Count-3-3);tri.Add (vert.Count-1-3);
-							//} else {
-								tri.Add (vert.Count-3);tri.Add (vert.Count-2);tri.Add (vert.Count-1);
-							//}
-						}
-					}
-				}
-			}
+	[HideInInspector] public VoxelTerrain v;
+	public void Update() {
+	}
+	
+	public void OnEnable() {
+		if(mesh==null) return;
+		v=transform.parent.GetComponent<VoxelTerrain>();
+		mesh.SetActive (true);
+	}
+	public void OnDisable() {
+		if(mesh==null) return;
+		mesh.SetActive (false);
+	}
+	
+	public Vector3 cen {
+		get {
+			Vector3 size=v.partSize;
+			return new Vector3(((float)px+0.5f)*size.x,0,((float)py+0.5f)*size.z);
 		}
-		if(vert.Count==0) return;
-		transitionMesh=new Mesh();
-		transitionMesh.vertices=vert.ToArray ();
-		transitionMesh.SetTriangles (tri.ToArray (),0);
-		transitionMesh.RecalculateBounds ();transitionMesh.RecalculateNormals ();
-		GameObject tr=UtilEditor.createOrGetGO ("Tr",transform);
-		if(tr.GetComponent<MeshFilter>()==null) tr.AddComponent<MeshFilter>();
-		if(tr.GetComponent<MeshRenderer>()==null) tr.AddComponent<MeshRenderer>();
-		tr.GetComponent<MeshFilter>().sharedMesh=transitionMesh;
-		tr.GetComponent<MeshRenderer>().sharedMaterial=mat;
 	}
-	
-	public Mesh transitionMesh;
-	void Update() {
-		DrawTrees ();
-		if(transitionMesh!=null)
-			;//Graphics.DrawMesh (transitionMesh,Vector3.zero,Quaternion.identity,mat,LayerMask.NameToLayer ("VoxelTerrain"));
+	public Vector3 origin {
+		get {
+			return new Vector3(px*v.partSize.x,0,py*v.partSize.z);
+		}
 	}
 	
 }

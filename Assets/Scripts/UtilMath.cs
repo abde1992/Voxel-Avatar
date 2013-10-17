@@ -5,6 +5,12 @@ using System.IO;
 
 public static class UtilMath {
 	
+	[System.Serializable]
+	public class ListVector3 {
+		public List<Vector3> l;
+		public ListVector3(List<Vector3> tl) {l=tl;}
+	}
+	
 	/*public static IntPoint getTerPt(Vector3 p,TerrainData td) {
 		int x=Mathf.RoundToInt (p.x/td.size.x*(float)(td.heightmapWidth-1));
 		int y=Mathf.RoundToInt (p.z/td.size.z*(float)(td.heightmapHeight-1));

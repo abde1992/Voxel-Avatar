@@ -3,7 +3,7 @@ using System.Collections;
 
 public partial class VTPart {
 
-	private int[] numPolys=new int[256] {
+	public static int[] numPolys=new int[256] {
 		0 , 1  , 1  , 2  , 1  , 2  , 2  , 3  ,  1  , 2  , 2  , 3  , 2  , 3  , 3  , 2  ,  1  , 2  , 2  , 3  , 2  , 3  , 3  , 4  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 3  ,  
 		1  , 2  , 2  , 3  , 2  , 3  , 3  , 4  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 3  ,  2  , 3  , 3  , 2  , 3  , 4  , 4  , 3  ,  3  , 4  , 4  , 3  , 4  , 5  , 5  , 2  ,  
 		1  , 2  , 2  , 3  , 2  , 3  , 3  , 4  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 3  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 5  ,  3  , 4  , 4  , 5  , 4  , 5  , 5  , 4  ,  
@@ -14,22 +14,22 @@ public partial class VTPart {
 		3  , 4  , 4  , 5  , 4  , 5  , 3  , 4  ,  4  , 5  , 5  , 2  , 3  , 4  , 2  , 1  ,  2  , 3  , 3  , 2  , 3  , 4  , 2  , 1  ,  3  , 2  , 4  , 1  , 2  , 1  , 1  , 0 
 	};
 	
-	private int[] edgeVerts=new int[] {
+	public static int[] edgeVerts=new int[] {
 		0,0,0, 0,1,0 , 1,1,0 , 1,0,0 ,
 		0,0,1 , 0,1,1 , 1,1,1 , 1,0,1 , 
 	};
-	private int[] edgeStart=new int[] {
+	public static int[] edgeStart=new int[] {
 		0,0,0, 0,1,0 , 1,0,0 , 0,0,0 ,
 		0,0,1 , 0,1,1 , 1,0,1 , 0,0,1 , 
 		0,0,0 , 0,1,0 , 1,1,0 , 1,0,0 ,
 	};
-	private int[] edgeDir=new int[] {
+	public static int[] edgeDir=new int[] {
 		0,1,0 ,  1,0,0 ,  0,1,0 ,  1,0,0 , 
 		0,1,0 ,  1,0,0 ,  0,1,0 ,  1,0,0 , 
 		0,0,1 ,  0,0,1 ,  0,0,1 ,  0,0,1 , 
 	};
 	
-	private int[] polys=new int[] {
+	public static int[] polys=new int[] {
 		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 		0,8,3,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 		0,1,9,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,

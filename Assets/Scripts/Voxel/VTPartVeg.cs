@@ -3,17 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 
 public partial class VTPart {
-
+	
+	[System.Serializable]
+	public class TreeGrp {
+		public List<Vector3> p;
+		public Vector3 cen;
+		public GameObject pref;
+	}
+	[HideInInspector] public List<TreeGrp> treeGrp=new List<TreeGrp>();
 	public void MakeTrees () {
-		Vector3 ex=UtilEditor.getWorldBounds (tree).extents;
+		Vector3 ex=UtilEditor.getWorldBounds (treePrefabs[0]).extents;
 		float exs=2*Mathf.Max (ex.x,ex.z);
-		int nx=Mathf.RoundToInt (size.x/exs);
-		int nz=Mathf.RoundToInt (size.z/exs);
+		int nx=Mathf.RoundToInt (v.partSize.x/exs);
+		int nz=Mathf.RoundToInt (v.partSize.z/exs);
 		List<Vector3> treePos=new List<Vector3>();
 		for(int i=0;i<nx;i++) {
 			for(int j=0;j<nz;j++) {
+				if(Random.Range (0f,1f)>0.5f) continue;
 				RaycastHit[] hit;
-				hit=Physics.RaycastAll (new Vector3((float)i/(float)nx*size.x,size.y,(float)j/(float)nz*size.z),-Vector3.up,size.y,1<<LayerMask.NameToLayer ("VoxelTerrain"));
+				hit=Physics.RaycastAll (new Vector3((float)i/(float)nx*v.partSize.x,v.partSize.y,(float)j/(float)nz*v.partSize.z),-Vector3.up,v.partSize.y,1<<LayerMask.NameToLayer ("VoxelTerrain"));
 				foreach(RaycastHit h in hit) {
 					if(Vector3.Dot(h.normal,Vector3.up)>Mathf.Cos(45)) {
 						treePos.Add (h.point);
@@ -22,19 +30,33 @@ public partial class VTPart {
 			}
 		}
 		
-		treeMesh.Clear ();
-		Octree o=new Octree(size.x,0,size.y,0,size.z,0,100);
+		//if(mesh.transform.FindChild ("Trees")!=null) DestroyImmediate (mesh.transform.FindChild ("Trees").gameObject);
+		//GameObject par=new GameObject("Trees");
+		//par.transform.parent=mesh.transform;
+		Octree o=new Octree(v.partSize.x,0,v.partSize.y,0,v.partSize.z,0,100);
 		foreach(Vector3 p in treePos) o.AddNode (p,p);
+		treeGrp=new List<TreeGrp>();
 		List<List<Vector3>> tp=new List<List<Vector3>>();
 		o.GetLeavePos (tp);
 		foreach(List<Vector3> lp in tp) {
+			TreeGrp t=new TreeGrp();
+			t.p=lp;
+			t.cen=Vector3.zero;
+			t.pref=treePrefabs[Random.Range(0,treePrefabs.Length)];
+			foreach(Vector3 p in lp) t.cen+=p/lp.Count;
+			treeGrp.Add (t);
+		}
+		/*int it=0;
+		foreach(List<Vector3> lp in tp) {
 			if(lp.Count==0) continue;
+			GameObject tree=treePrefabs[Random.Range (0,treePrefabs.Length)];
 			Mesh m=new Mesh();
 			Mesh mt=tree.GetComponent<MeshFilter>().sharedMesh;
 			List<CombineInstance> ci=new List<CombineInstance>();
 			for(int i=0;i<lp.Count;i++) {
 				CombineInstance c=new CombineInstance();
-				c.mesh=mt;c.transform=Matrix4x4.TRS (lp[i],Quaternion.identity,Vector3.one);
+				Vector3 sc=new Vector3(Random.Range (0.5f,1.5f),Random.Range (0.5f,1.5f),Random.Range (0.5f,1.5f));
+				c.mesh=mt;c.transform=Matrix4x4.TRS (lp[i],Quaternion.Euler (0,Random.Range (0,90),0),sc);
 				ci.Add (c);
 			}
 			m.subMeshCount=mt.subMeshCount;
@@ -53,19 +75,23 @@ public partial class VTPart {
 				m.SetTriangles (m1.triangles,i);
 			}
 			m.RecalculateBounds ();m.RecalculateNormals ();
-			treeMesh.Add (m);
-		}
+			GameObject g=new GameObject();g.name="TreeGrp"+it++;
+			g.AddComponent<MeshFilter>().sharedMesh=m;
+			g.AddComponent<MeshRenderer>().sharedMaterials=tree.renderer.sharedMaterials;
+			g.AddComponent<MeshCollider>().sharedMesh=m;
+			g.transform.parent=par.transform;
+		}*/
 	}
 	
 	public void MakeVeg () {
 		float exs=2;
-		int nx=Mathf.RoundToInt (size.x/exs);
-		int nz=Mathf.RoundToInt (size.z/exs);
+		int nx=Mathf.RoundToInt (v.partSize.x/exs);
+		int nz=Mathf.RoundToInt (v.partSize.z/exs);
 		List<Vector3> pos=new List<Vector3>();
 		for(int i=0;i<nx;i++) {
 			for(int j=0;j<nz;j++) {
 				RaycastHit[] hit;
-				hit=Physics.RaycastAll (new Vector3((float)i/(float)nx*size.x,size.y,(float)j/(float)nz*size.z),-Vector3.up,size.y,1<<LayerMask.NameToLayer ("VoxelTerrain"));
+				hit=Physics.RaycastAll (new Vector3((float)i/(float)nx*v.partSize.x,v.partSize.y,(float)j/(float)nz*v.partSize.z),-Vector3.up,v.partSize.y,1<<LayerMask.NameToLayer ("VoxelTerrain"));
 				foreach(RaycastHit h in hit) {
 					if(Vector3.Dot(h.normal.normalized,Vector3.up)>Mathf.Cos(1)) {
 						pos.Add (h.point);
@@ -74,14 +100,14 @@ public partial class VTPart {
 			}
 		}
 		
-		Octree o=new Octree(size.x,0,size.y,0,size.z,0,100);
+		if(mesh.transform.FindChild ("Veg")!=null) DestroyImmediate (mesh.transform.FindChild ("Veg").gameObject);
+		GameObject par=new GameObject("Veg");
+		par.transform.parent=mesh.transform;
+		
+		Octree o=new Octree(v.partSize.x,0,v.partSize.y,0,v.partSize.z,0,100);
 		foreach(Vector3 p in pos) o.AddNode (p,p);
 		List<List<Vector3>> tp=new List<List<Vector3>>();
 		o.GetLeavePos (tp);
-		GameObject mesh=GameObject.Find (gameObject.name+" mesh");
-		if(veg!=null) DestroyImmediate (veg);
-		Transform par=(veg=new GameObject("Veg")).transform;
-		par.parent=mesh.transform;
 		foreach(List<Vector3> lp in tp) {
 			if(lp.Count==0) continue;
 			GameObject g=new GameObject("Grass");
@@ -123,19 +149,8 @@ public partial class VTPart {
 			m.RecalculateBounds ();m.RecalculateNormals ();
 			g.AddComponent<MeshFilter>().sharedMesh=m;
 			g.AddComponent<MeshRenderer>().sharedMaterial=grassMat;
-			g.transform.parent=par;
+			g.transform.parent=par.transform;
 		}
 	}
 	
-	
-	public void DrawTrees() {
-		foreach(Mesh m in treeMesh) {
-			Material[] mat=tree.renderer.sharedMaterials;
-			for(int i=0;i<m.subMeshCount;i++) {
-				Graphics.DrawMesh (m,Vector3.zero,Quaternion.identity,mat[i],LayerMask.NameToLayer ("Default"),Camera.current,i);
-			}
-		}
-	}
-	
-	public GameObject veg;
 }
