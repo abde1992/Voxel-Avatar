@@ -6,6 +6,7 @@ public class Fly : MonoBehaviour {
 	void Start () {
 	}
 	
+	public float minSp=10;
 	public float maxLift=100,maxAcc=100,maxBankAcc=100;
 	public float maxLiftTor=10,maxBankTorUp=10,maxBankTorFor=10;
 	public float springLiftTor=1,springBankTor=1;
@@ -17,13 +18,16 @@ public class Fly : MonoBehaviour {
 		float a=Input.GetAxis ("Vertical");
 		float b=Input.GetAxis ("Horizontal");
 		
-		lift=ws*maxLift+Physics.gravity.magnitude;
+		lift=ws*maxLift;
 		rigidbody.AddForce (transform.up*rigidbody.mass*lift,ForceMode.Force);
 		liftTor=b!=0?0:ws*maxLiftTor;
 		rigidbody.AddTorque (-transform.right*rigidbody.mass*liftTor);
 		
 		acc=a*maxAcc;
 		rigidbody.AddForce (transform.forward*rigidbody.mass*acc,ForceMode.Force);
+		sp=rigidbody.velocity.magnitude;
+		if(sp<minSp)
+			rigidbody.AddForce(transform.forward*(minSp-sp),ForceMode.VelocityChange);
 		
 		bankAcc=b*maxBankAcc;
 		rigidbody.AddForce (transform.right*rigidbody.mass*bankAcc,ForceMode.Force);
@@ -36,4 +40,6 @@ public class Fly : MonoBehaviour {
 		rigidbody.AddTorque (-(90-Vector3.Angle(transform.right,Vector3.up))*transform.forward*rigidbody.mass*springBankTor);
 		
 	}
+	
+	public float sp;
 }

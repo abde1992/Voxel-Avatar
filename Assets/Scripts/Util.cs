@@ -84,8 +84,8 @@ public static class Util {
 	
 	
 	public static Transform getAT(GameObject g) {
-		GameObject at=GameObject.Find ("AimTargets");
-		return at.transform.FindChild (g.name+"AT");
+		GameObject at=UtilEditor.createOrGetGO("AimTargets",null);
+		return UtilEditor.createOrGetGO(g.name+"AT",at.transform).transform;
 	}
 	
 	public static bool Turn(Transform t,Vector3 dir,float wsp,float err) {

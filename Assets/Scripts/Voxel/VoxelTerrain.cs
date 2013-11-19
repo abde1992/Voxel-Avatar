@@ -54,6 +54,7 @@ public class VoxelTerrain : MonoBehaviour {
 	}
 	
 	
+	public float freq=0.00632f/7,ampRatio=0.25f;
 	public float Density(Vector3 p) {
 		/*Vector3 v=p-size/2;v.y=0;
 		float h=100+peakHt-v.magnitude/size.magnitude*2*peakHt;
@@ -61,7 +62,7 @@ public class VoxelTerrain : MonoBehaviour {
 		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.x)-size.x*0.4f,0f,Mathf.Infinity);
 		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.z)-size.z*0.4f,0f,Mathf.Infinity);*/
 		float d=size/4-(p-Vector3.one*size/2).magnitude;
-		float f=0.00632f/7,a=size/4;
+		float f=freq,a=size*ampRatio;
 		System.Func<float,float,float> NLQs=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf));
 		System.Func<float,float,Vector3,float> NLQs1=(mf,ma,p1)=>a*ma*(SimplexNoise.Noise.Generate (p1*f*mf));
 		System.Func<float,float,float> NLQu=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf)+1)/2;
