@@ -4,97 +4,58 @@ using System.Collections.Generic;
 
 public partial class VTPart : MonoBehaviour {
 	
-	[HideInInspector] public int px,py;
-	public Material mat,grassMat;
+	[HideInInspector] public VoxelTerrain v;
+	[HideInInspector] public int px,py,pz;
 	public GameObject mesh;
-	public GameObject[] treePrefabs;
-	public List<VTChunk> chunks=new List<VTChunk>();
-	
-	float Density(Vector3 p) {
-		/*Vector3 v=p-size/2;v.y=0;
-		float h=100+peakHt-v.magnitude/size.magnitude*2*peakHt;
-		float d=(h-p.y)*(p.y-100);
-		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.x)-size.x*0.4f,0f,Mathf.Infinity);
-		d+=-1e3f*Mathf.Clamp (Mathf.Abs(v.z)-size.z*0.4f,0f,Mathf.Infinity);*/
-		float d=v.partSize.y/2-p.y;
-		float f=0.00632f/7,a=v.partSize.y/4;
-		System.Func<float,float,float> NLQs=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf));
-		System.Func<float,float,Vector3,float> NLQs1=(mf,ma,p1)=>a*ma*(SimplexNoise.Noise.Generate (p1*f*mf));
-		System.Func<float,float,float> NLQu=(mf,ma)=>a*ma*(SimplexNoise.Noise.Generate (p*f*mf)+1)/2;
-		//for(int i=0,m=1;i<9;i++,m*=2) {
-			//d+=40/m*SimplexNoise.Noise.Generate (p*0.00632f*m);
-		//}
-		d+=NLQs(512 * 0.934f, 4.793e-4f)
-			 + NLQs(256 * 1.021f,0.000793f)
-			 + NLQs(128 * 0.985f, 0.001792f)
-             + NLQs(64 * 1.051f, 0.003456f)
-             + NLQs(32 * 1.020f, 0.06656f)
-             + NLQs(16 * 0.968f, 0.125f)
-             + NLQs(8 * 0.994f, 0.25f * 1.0f)
-             + NLQs(4*1.045f, 0.5f*0.9f)
-             + NLQs(2*0.972f, 0.8f)
-             + NLQs1(1f, 1f, p+new Vector3(NLQu(1f,8f),NLQu(1.95f,4f),NLQu(4.1f,2f)));
-		
-		float hard_floor_y = 500;
-		d += Mathf.Clamp01((hard_floor_y - p.y)*3)*40;  
-		return d;
+	int nchunk {get{return Mathf.RoundToInt (v.partSize/v.blockSize);}}
+	public VTChunk[] _chunks;
+	public VTChunk chunk(int x,int y,int z) {
+		if(_chunks==null||_chunks.Length==0) return null;
+		return _chunks[x*nchunk*nchunk+y*nchunk+z];
+	}
+	public void chunk(int x,int y,int z,VTChunk c) {
+		_chunks[x*nchunk*nchunk+y*nchunk+z]=c;
 	}
 	
 	public void Make(float dn) {
-		for(int i=0;i<transform.childCount;) DestroyImmediate (transform.GetChild (0).gameObject);
 		mesh=GameObject.Find (gameObject.name+" mesh");
 		if(mesh!=null) DestroyImmediate (mesh);
 		mesh=new GameObject(gameObject.name+" mesh");
 		mesh.transform.parent=UtilEditor.createOrGetGO ("VTMesh",null).transform;
-		v.blockSize=Mathf.NextPowerOfTwo ((int)v.blockSize);
-		Vector3 size=v.partSize;
-		int nx=Mathf.RoundToInt (size.x/v.blockSize);
-		int ny=Mathf.RoundToInt (size.y/v.blockSize);
-		int nz=Mathf.RoundToInt (size.z/v.blockSize);
-		chunks.Clear ();
-		VTChunk[,,] nch=new VTChunk[nx+2,ny+2,nz+2];
-		for(int i=0;i<2;i++) {
-			if(px+i*2-1>=v.nx||px+i*2-1<0) continue;
-			for(int j=0;j<ny;j++)
-				for(int k=0;k<nz;k++) {
-					VTPart p=v.part (px+i*2-1,py);
-					foreach(VTChunk c in p.chunks) {
-						if(c.x==((i+1)%2)*(nx-1)&&c.y==j&&c.z==k) {nch[i*nx,j+1,k+1]=c;break;}
-					}
-				}
-		}
-		for(int i=0;i<nx;i++)
-			for(int j=0;j<ny;j++)
-				for(int k=0;k<2;k++) {
-					if(py+k*2-1>=v.ny||py+k*2-1<0) continue;
-					VTPart p=v.part (px,py+k*2-1);
-					foreach(VTChunk c in p.chunks) {
-						if(c.z==((k+1)%2)*(nz-1)&&c.y==j&&c.x==i) {nch[i+1,j+1,k*nz]=c;break;}
-					}
-				}
-		for(int i=0,gi=0;i<nx;i++) {
-			for(int j=0;j<ny;j++) {
-				for(int k=0;k<nz;k++) {
+		_chunks=new VTChunk[nchunk*nchunk*nchunk];
+		VTChunk[,,] nch=new VTChunk[nchunk,nchunk,nchunk];
+		for(int i=0,gi=0;i<nchunk;i++) {
+			for(int j=0;j<nchunk;j++) {
+				for(int k=0;k<nchunk;k++) {
 					Mesh m=Make (dn,origin+v.blockSize*new Vector3(i,j,k),v.blockSize*Vector3.one);
-					if(m==null) continue;
+					if(m==null) {chunk (i,j,k,null);continue;}
 					GameObject g=new GameObject("Chunk"+gi++);
 					g.transform.parent=mesh.transform;
 					g.AddComponent<MeshFilter>().sharedMesh=m;
-					g.AddComponent<MeshRenderer>().sharedMaterial=mat;
+					g.AddComponent<MeshRenderer>().sharedMaterial=v.mat;
 					g.AddComponent<MeshCollider>().sharedMesh=m;
 					g.layer=LayerMask.NameToLayer ("VoxelTerrain");
 					VTChunk c=g.AddComponent<VTChunk>();
 					c.x=i;c.y=j;c.z=k;
 					System.Func<int,int,int,int> SetNeighs=(x,y,z)=> {
-						VTChunk c1=nch[i+1+x,j+1+y,k+1+z];
+						VTChunk c1=null;
+						if(i+x==-1) c1=px<=0?null:v.part (px-1,py,pz).chunk(nchunk-1,j,k);
+						else if(i+x==nchunk) c1=px>=v.npart-1?null:v.part (px+1,py,pz).chunk(0,j,k);
+						else if(j+y==-1) c1=py<=0?null:v.part (px,py-1,pz).chunk(i,nchunk-1,k);
+						else if(j+y==nchunk) c1=py>=v.npart-1?null:v.part (px,py+1,pz).chunk(i,0,k);
+						else if(k+z==-1) c1=pz<=0?null:v.part (px,py,pz-1).chunk(i,j,nchunk-1);
+						else if(k+z==nchunk) c1=pz>=v.npart-1?null:v.part (px,py,pz+1).chunk(i,j,0);
+						else {
+							c1=nch[i+x,j+y,k+z];
+						}
 						if(c1!=null) {c.setNeigh (x,y,z,c1);c1.setNeigh (-x,-y,-z,c);}
 						return 0;
 					};
 					SetNeighs(-1,0,0);SetNeighs(1,0,0);
 					SetNeighs(0,-1,0);SetNeighs(0,1,0);
 					SetNeighs(0,0,-1);SetNeighs(0,0,1);
-					nch[i+1,j+1,k+1]=c;
-					chunks.Add (c);
+					nch[i,j,k]=c;
+					chunk(i,j,k,c);
 				}
 			}
 		}
@@ -110,7 +71,7 @@ public partial class VTPart : MonoBehaviour {
 		};
 		float[,,] density=new float[nx+2,ny+2,nz+2];
 		for(int a=0;a<=nx+1;a++) for(int b=0;b<=ny+1;b++) for(int c=0;c<=nz+1;c++) {
-			density[a,b,c]=Density (gridPt(a,b,c));
+			density[a,b,c]=v.Density (gridPt(a,b,c));
 		}
 		int[,,,] iv=new int[nx+1,ny+1,nz+1,3];
 		for(int a=0;a<nx+1;a++) for(int b=0;b<ny+1;b++) for(int c=0;c<nz+1;c++) {
@@ -162,18 +123,19 @@ public partial class VTPart : MonoBehaviour {
 		return mesh;
 	}
 	
-	public int getLOD(VoxelTerrain v,Vector3 p,Bounds b) {
+	public int getLOD(Vector3 p,Bounds b) {
 		float d=Vector3.Distance(p,b.center)-b.extents.Max ();
 		for(int i=0;i<v.lod.Length;i++) if(d<v.lod[i].d) return i;
 		return v.lod.Length-1;
 	}
 	public void ManageLOD(Vector3 p) {
-		Vector3 cen=v.partSize;cen.Scale (new Vector3(px+0.5f,0.5f,py+0.5f));
-		Bounds b0=new Bounds(cen,v.partSize);
-		foreach(VTChunk c in chunks) {
+		Vector3 cen=new Vector3(px+0.5f,py+0.5f,pz+0.5f)*v.partSize;
+		Bounds b0=new Bounds(cen,v.partSize*Vector3.one);
+		foreach(VTChunk c in _chunks) {
+			if(c==null) continue;
 			MeshFilter mf=c.GetComponent<MeshFilter>();
-			int l=c.lod=getLOD(v,p,mf.sharedMesh!=null?mf.sharedMesh.bounds:b0);
-			string path="VT/LOD"+l+"/Part("+px+","+py+")/"+c.gameObject.name+".asset";
+			int l=c.lod=getLOD(p,mf.sharedMesh!=null?mf.sharedMesh.bounds:b0);
+			string path="VT/LOD"+l+"/"+v.partName (px,py,pz)+"/"+c.gameObject.name+".asset";
 			path=path.Substring (0,path.IndexOf ("."));
 			Mesh m=Resources.Load(path,typeof(Mesh)) as Mesh;
 			mf.sharedMesh=m as Mesh;
@@ -181,29 +143,18 @@ public partial class VTPart : MonoBehaviour {
 		}
 	}
 	
-	[HideInInspector] public VoxelTerrain v;
 	public void Update() {
-	}
-	
-	public void OnEnable() {
-		if(mesh==null) return;
-		v=transform.parent.GetComponent<VoxelTerrain>();
-		mesh.SetActive (true);
-	}
-	public void OnDisable() {
-		if(mesh==null) return;
-		mesh.SetActive (false);
 	}
 	
 	public Vector3 cen {
 		get {
-			Vector3 size=v.partSize;
-			return new Vector3(((float)px+0.5f)*size.x,0,((float)py+0.5f)*size.z);
+			float size=v.partSize;
+			return new Vector3(((float)px+0.5f)*size,((float)py+0.5f)*size,((float)pz+0.5f)*size);
 		}
 	}
 	public Vector3 origin {
 		get {
-			return new Vector3(px*v.partSize.x,0,py*v.partSize.z);
+			return new Vector3(px*v.partSize,py*v.partSize,pz*v.partSize);
 		}
 	}
 	

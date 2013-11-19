@@ -5,10 +5,10 @@ using System.Collections.Generic;
 public partial class VTPart {
 
 	public void MakeTransitions() {
-		int x=px,y=py;
 		List<Vector3> vert=new List<Vector3>();
 		List<int> tri=new List<int>();
-		foreach(VTChunk c in chunks) {
+		foreach(VTChunk c in _chunks) {
+			if(c==null) continue;
 			Vector3 or=origin+v.blockSize*new Vector3(c.x,c.y,c.z),size=v.blockSize*Vector3.one;
 			int nx=Mathf.RoundToInt (size.x/v.lod[c.lod].dn);
 			int ny=Mathf.RoundToInt (size.y/v.lod[c.lod].dn);
@@ -21,7 +21,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -34,8 +34,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -60,7 +60,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -73,8 +73,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -99,7 +99,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -112,8 +112,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -139,7 +139,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -152,8 +152,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -179,7 +179,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -192,8 +192,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -218,7 +218,7 @@ public partial class VTPart {
 						};
 						int icase=0;
 						for(int a=0;a<3;a++) for(int b=0;b<3;b++)
-							if(Density (gridPt(a,b))<0)
+							if(v.Density (gridPt(a,b))<0)
 								icase+=transitionCaseValues[b*3+a];
 						int classIndex=transitionCellClass[icase];
 						bool invert=(classIndex&0x80)>0;
@@ -231,8 +231,8 @@ public partial class VTPart {
 								int iv0=(vd&0x0F),iv1=(vd&0xFF)>>4;
 								Vector3 p0=gridPt(transitionVertexPos[iv0][0],transitionVertexPos[iv0][1]);
 								Vector3 p1=gridPt(transitionVertexPos[iv1][0],transitionVertexPos[iv1][1]);
-								float d0=Density(p0);
-								float d1=Density(p1);
+								float d0=v.Density(p0);
+								float d1=v.Density(p1);
 								if(d0*d1>=0) {
 									Debug.LogError ("transition density sign");
 								}
@@ -258,6 +258,6 @@ public partial class VTPart {
 		if(tr.GetComponent<MeshFilter>()==null) tr.AddComponent<MeshFilter>();
 		if(tr.GetComponent<MeshRenderer>()==null) tr.AddComponent<MeshRenderer>();
 		tr.GetComponent<MeshFilter>().sharedMesh=transitionMesh;
-		tr.GetComponent<MeshRenderer>().sharedMaterial=mat;
+		tr.GetComponent<MeshRenderer>().sharedMaterial=v.mat;
 	}
 }
