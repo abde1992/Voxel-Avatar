@@ -1,8 +1,14 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Simple script to make the Voxel asteroid move
+/// </summary>
 public class Asters : MonoBehaviour {
-	
+
+	/// <summary>
+	/// Asteroid prefab
+	/// </summary>
 	public GameObject pref;
 	
 	private Transform player;
@@ -10,7 +16,16 @@ public class Asters : MonoBehaviour {
 		player=GameObject.FindGameObjectWithTag("Player").transform;
 	}
 	
-	public float dt=1,radius=1000,speed=100;private float last;
+	public float dt=1;
+	/// <summary>
+	/// Radius around the player
+	/// </summary>
+	public float radius=1000;
+	/// <summary>
+	/// Speed of asteroid
+	/// </summary>
+	public float speed=100;
+	private float last;
 	public int max=100;
 	void Update () {
 		if(Time.time>last+dt) {

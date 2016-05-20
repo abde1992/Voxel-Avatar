@@ -3,6 +3,18 @@ using System.Collections;
 
 public partial class VTPart {
 
+	// Arrays for the Marching Cube algorithm
+	/// In marching cubes, we aim to create a face/triangle only at density = 0.
+	/// Obviously, since density is a complicated function, and sampling it is expensive, 
+	/// we create the faces by doing a linear interpolation in the cell
+	/// E.g. if the end points of an edge have density values of different sign, then a face must pass 
+	/// through this edge, at a point which is calculated by linearly interpolating the density values to 0.
+	/// Following arrays help in obtaining such faces quickly, once we can obtain the "case" for the cell.
+	/// "Case" is a binary mask depending only on the density values in the cell
+
+	/// <summary>
+	/// Number of polygons for each case
+	/// </summary>
 	public static int[] numPolys=new int[256] {
 		0 , 1  , 1  , 2  , 1  , 2  , 2  , 3  ,  1  , 2  , 2  , 3  , 2  , 3  , 3  , 2  ,  1  , 2  , 2  , 3  , 2  , 3  , 3  , 4  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 3  ,  
 		1  , 2  , 2  , 3  , 2  , 3  , 3  , 4  ,  2  , 3  , 3  , 4  , 3  , 4  , 4  , 3  ,  2  , 3  , 3  , 2  , 3  , 4  , 4  , 3  ,  3  , 4  , 4  , 3  , 4  , 5  , 5  , 2  ,  

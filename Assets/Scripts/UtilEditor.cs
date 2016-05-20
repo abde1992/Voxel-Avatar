@@ -225,38 +225,5 @@ public class UtilEditor {
 		return g;
 	}
 	
-	public static Mesh ClipMesh(Mesh m,Vector4[] planes) {
-		List<DecalPolygon> startPolygons=new List<DecalPolygon>(),clippedPolygons = new List<DecalPolygon>();
-		for(int i=0;i<m.triangles.Length/3;i++) {
-			int a=m.triangles[i*3+0],b=m.triangles[i*3+1],c=m.triangles[i*3+2];
-			DecalPolygon p=new DecalPolygon(m.vertices[a],m.vertices[b],m.vertices[c]);
-			startPolygons.Add(p);
-		}
 		
-		for(int i = 0; i < startPolygons.Count; i++) {
-			DecalPolygon face = startPolygons[i];
-			for(int j=0;j<planes.Length;j++) {
-				face = DecalPolygon.ClipPolygonAgainstPlane(face,planes[j]);
-				if(face == null) break;
-				if(j==planes.Length-1)
-					clippedPolygons.Add(face);
-			}
-		}
-		
-		Mesh m1=new Mesh();
-		List<Vector3> v=new List<Vector3>();
-		List<int> tri=new List<int>();int ivert=0;
-		foreach(DecalPolygon p in clippedPolygons) {
-			Vector2[] tuv;Vector3[] vert;int[] trt;
-			p.get (out vert,out trt,out tuv);
-			for(int k=0;k<trt.Length;k++) trt[k]+=ivert;
-			tri.AddRange(trt);
-			v.AddRange (vert);
-			ivert+=p.verticeCount;
-		}
-		m1.vertices=v.ToArray ();
-		m1.SetTriangles (tri.ToArray (),0);
-		return m1;
-	}
-	
 }

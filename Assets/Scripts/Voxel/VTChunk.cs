@@ -4,6 +4,7 @@ using System.Collections;
 public class VTChunk : MonoBehaviour {
 	
 	public int x,y,z;
+	// The LOD of the latest mesh that this chunk gameobject has
 	public int lod;
 	public VTChunk[] _neigh=new VTChunk[6];
 	public VTChunk getNeigh(int i,int j,int k) {
