@@ -109,7 +109,7 @@ public class VoxelTerrain : MonoBehaviour {
 	/// Also makes the transition mesh between different LOD levels, to prevent cracks in the terrain
 	/// </summary>
 	/// <param name="cp">Position of the camera/player</param>
-	public void LoadLODMeshes(Vector3 cp) {
+	public void LoadMeshes(Vector3 cp) {
 		foreach(VTPart p in _part) {
 			p.LoadLODMeshes (cp);
 		}

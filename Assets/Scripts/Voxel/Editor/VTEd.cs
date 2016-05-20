@@ -73,7 +73,7 @@ public class VTEd : Editor {
 				v.edz=Mathf.Clamp (v.edz,0,v.npart-1);
 				
 				Vector3 cp=Camera.current.transform.position;
-				v.LoadLODMeshes(cp);
+				v.LoadMeshes(cp);
 			}
 		}
 		Vector3 p=new Vector3(v.edx+0.5f,v.edy+0.5f,v.edz+0.5f)*v.partSize;

@@ -9,11 +9,6 @@ using System.Collections.Generic;
 // TODO: Create a smoother transition mesh, to remove lighting artifacts
 public partial class VTPart {
 
-	/// <summary>
-	/// Makes a mesh bridging the transitions between different LOD meshes.
-	/// To remove cracks in the final mesh
-	/// We expect the difference in LOD to be atmost 1
-	/// </summary>
 	public void MakeTransitions() {
 
 		List<Vector3> vert=new List<Vector3>();
