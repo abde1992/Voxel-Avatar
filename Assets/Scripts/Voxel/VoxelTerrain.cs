@@ -6,7 +6,7 @@ using System.Collections.Generic;
 // A VoxelTerrain is divided into (npart^3) number of VTPart objects. Each VTPart has a number of chunks (VTChunk) which contain the actual mesh of that region
 // Can be used only as part of the editor scripts in Unity to make a voxel terrain in the editor
 // Put this script on any Gameobject. Click on Init button in Inspector to initialize.
-// In editor, you can select a part of the terrain by clicking in that region. Then, click on "Make Part" to generate a voxel terrain in that region.
+// In editor, you can select a part of the terrain by using keyboard. Then, click on "Make Part" to generate a voxel terrain in that region.
 // This plugin generates terrain in parts and chunks, as then an update operation on a region (at runtime, for instance) will cost less, as it will only have to update the mesh specific to that region.
 // See also the editor scripts (VTEd.cs) 
 
